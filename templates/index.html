@@ -1118,11 +1118,29 @@ style="width:97%;background:var(--neon)">
 
 </div>
 `;
+// SAVE TO MONGODB
+fetch("/save_log", {
+    method:"POST",
+    headers:{
+        "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+        ip: ip,
+        port: port,
+        duration: dur,
+        status: attack ? "Attack Detected" : "No attack detected",
+        type: attack ? "Attack" : "Normal"
+    })
+})
+.then(res => res.json())
+.then(data=>{
+    console.log("Saved to MongoDB:", data);
+})
+.catch(err=>{
+    console.log("MongoDB Error:", err);
+});
 
 }
-
-
-
 },1000);
 
 
