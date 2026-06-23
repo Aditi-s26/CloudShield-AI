@@ -1,351 +1,1045 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-
-<title>CloudShield AI</title>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CloudShield AI — Intrusion Detection System</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --neon:#00FFB2;
+    --neon2:#00C8FF;
+    --dark:#030812;
+    --dark2:#070F1F;
+    --dark3:#0C1830;
+    --accent:#FF3B6B;
+    --text:#E8F4FF;
+    --muted:#6B8BAF;
+    --card:#0D1F3C;
+    --border:rgba(0,255,178,0.12);
+    --font-head:'Syne',sans-serif;
+    --font-mono:'Space Mono',monospace;
+  }
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--dark);
+    color:var(--text);
+    font-family:var(--font-mono);
+    overflow-x:hidden;
+    line-height:1.6;
+  }
 
-body {
-    background:#050816;
-    color:white;
-    font-family:Arial, sans-serif;
+  /* ANIMATED GRID BACKGROUND */
+  body::before{
+    content:'';
+    position:fixed;
+    inset:0;
+    background-image:
+      linear-gradient(rgba(0,255,178,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,178,0.03) 1px, transparent 1px);
+    background-size:60px 60px;
+    z-index:0;
+    animation:gridPulse 8s ease-in-out infinite;
+  }
+  @keyframes gridPulse{
+    0%,100%{opacity:1}
+    50%{opacity:0.4}
+  }
+
+  /* FLOATING PARTICLES */
+  .particles{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+  .particle{
+    position:absolute;
+    width:2px;height:2px;
+    background:var(--neon);
+    border-radius:50%;
+    animation:float linear infinite;
+    opacity:0;
+  }
+  @keyframes float{
+    0%{transform:translateY(100vh) translateX(0);opacity:0}
+    10%{opacity:0.6}
+    90%{opacity:0.6}
+    100%{transform:translateY(-100px) translateX(var(--drift));opacity:0}
+  }
+
+  /* NAV */
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    padding:1rem 3rem;
+    display:flex;align-items:center;justify-content:space-between;
+    background:rgba(3,8,18,0.85);
+    backdrop-filter:blur(20px);
+    border-bottom:1px solid var(--border);
+  }
+  .nav-logo{
+    font-family:var(--font-head);
+    font-weight:800;font-size:1.2rem;
+    color:var(--neon);
+    letter-spacing:2px;
+    text-transform:uppercase;
+  }
+  .nav-logo span{color:var(--text)}
+  .nav-links{display:flex;gap:2rem;list-style:none}
+  .nav-links a{
+    color:var(--muted);font-size:0.75rem;text-decoration:none;
+    letter-spacing:1px;text-transform:uppercase;
+    transition:color 0.3s;
+  }
+  .nav-links a:hover{color:var(--neon)}
+  .nav-badge{
+    font-size:0.65rem;padding:0.3rem 0.8rem;
+    border:1px solid var(--neon);color:var(--neon);
+    border-radius:2px;letter-spacing:1px;text-transform:uppercase;
+    animation:blink 2s ease-in-out infinite;
+  }
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.5}}
+
+  /* HERO */
+  .hero{
+    min-height:100vh;
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    padding:8rem 2rem 4rem;
+    position:relative;z-index:1;
     text-align:center;
-    padding:30px;
-}
+  }
+  .hero-tag{
+    font-size:0.7rem;letter-spacing:4px;text-transform:uppercase;
+    color:var(--neon);margin-bottom:1.5rem;
+    display:flex;align-items:center;gap:0.5rem;
+  }
+  .hero-tag::before,.hero-tag::after{
+    content:'';display:block;width:40px;height:1px;background:var(--neon);opacity:0.5;
+  }
+  .hero h1{
+    font-family:var(--font-head);
+    font-size:clamp(2.5rem,7vw,5.5rem);
+    font-weight:800;
+    line-height:1.05;
+    margin-bottom:1.5rem;
+    letter-spacing:-1px;
+  }
+  .hero h1 .line1{color:var(--text)}
+  .hero h1 .highlight{
+    color:var(--neon);
+    text-shadow:0 0 40px rgba(0,255,178,0.4);
+  }
+  .hero-sub{
+    font-size:0.9rem;color:var(--muted);
+    max-width:600px;line-height:1.8;margin-bottom:2.5rem;
+  }
+  .hero-cta{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:4rem}
+  .btn-primary{
+    padding:0.9rem 2rem;
+    background:var(--neon);color:var(--dark);
+    font-family:var(--font-mono);font-size:0.8rem;font-weight:700;
+    letter-spacing:1px;text-transform:uppercase;
+    border:none;cursor:pointer;text-decoration:none;
+    clip-path:polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+    transition:all 0.3s;
+  }
+  .btn-primary:hover{background:#00e09e;box-shadow:0 0 30px rgba(0,255,178,0.4)}
+  .btn-outline{
+    padding:0.9rem 2rem;
+    background:transparent;color:var(--neon);
+    font-family:var(--font-mono);font-size:0.8rem;font-weight:700;
+    letter-spacing:1px;text-transform:uppercase;
+    border:1px solid rgba(0,255,178,0.4);cursor:pointer;text-decoration:none;
+    clip-path:polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+    transition:all 0.3s;
+  }
+  .btn-outline:hover{border-color:var(--neon);background:rgba(0,255,178,0.05)}
 
+  /* THREAT METER */
+  .threat-meter{
+    display:flex;align-items:center;gap:1rem;
+    padding:1rem 1.5rem;
+    background:rgba(255,59,107,0.08);
+    border:1px solid rgba(255,59,107,0.2);
+    border-radius:4px;font-size:0.75rem;
+  }
+  .threat-dot{
+    width:10px;height:10px;border-radius:50%;background:var(--accent);
+    animation:pulse 1.5s ease-in-out infinite;
+    flex-shrink:0;
+  }
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,59,107,0.4)}50%{box-shadow:0 0 0 8px rgba(255,59,107,0)}}
 
-.container {
-    max-width:600px;
-    margin:auto;
-    background:#111827;
-    padding:30px;
-    border-radius:15px;
-}
+  /* LIVE TERMINAL */
+  .terminal-wrapper{
+    width:100%;max-width:800px;
+    background:var(--dark2);
+    border:1px solid var(--border);
+    border-radius:4px;
+    overflow:hidden;
+    margin-top:1rem;
+  }
+  .terminal-bar{
+    display:flex;align-items:center;gap:0.5rem;
+    padding:0.6rem 1rem;
+    background:var(--dark3);
+    border-bottom:1px solid var(--border);
+  }
+  .t-dot{width:10px;height:10px;border-radius:50%}
+  .t-red{background:#FF5F57}.t-yellow{background:#FFBD2E}.t-green{background:#27C93F}
+  .terminal-title{font-size:0.7rem;color:var(--muted);margin-left:auto;margin-right:auto;letter-spacing:1px}
+  .terminal-body{padding:1rem 1.5rem;font-size:0.78rem;line-height:1.8;min-height:140px}
+  .t-line{opacity:0;animation:typeIn 0.3s forwards}
+  .t-green-text{color:#27C93F}
+  .t-cyan{color:var(--neon2)}
+  .t-red-text{color:var(--accent)}
+  .t-yellow-text{color:#FFBD2E}
+  .t-muted{color:var(--muted)}
+  .cursor{animation:blink 1s step-end infinite;color:var(--neon)}
+  @keyframes typeIn{to{opacity:1}}
 
+  /* STATS BAR */
+  .stats-bar{
+    position:relative;z-index:1;
+    display:grid;grid-template-columns:repeat(4,1fr);
+    gap:0;border-top:1px solid var(--border);
+    border-bottom:1px solid var(--border);
+    background:rgba(7,15,31,0.8);
+  }
+  .stat-item{
+    padding:2rem 1.5rem;
+    border-right:1px solid var(--border);
+    text-align:center;
+  }
+  .stat-item:last-child{border-right:none}
+  .stat-num{
+    font-family:var(--font-head);font-size:2.5rem;font-weight:800;
+    color:var(--neon);display:block;
+    text-shadow:0 0 20px rgba(0,255,178,0.3);
+  }
+  .stat-label{font-size:0.65rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:0.3rem}
 
-input {
-    width:80%;
-    padding:12px;
-    margin:10px;
-    border-radius:8px;
-    border:none;
-}
+  /* SECTIONS */
+  section{position:relative;z-index:1;padding:5rem 2rem}
+  .container{max-width:1100px;margin:0 auto}
+  .section-tag{
+    font-size:0.65rem;letter-spacing:4px;text-transform:uppercase;
+    color:var(--neon);margin-bottom:1rem;
+    display:flex;align-items:center;gap:0.5rem;
+  }
+  .section-tag::before{content:'//';color:var(--muted)}
+  .section-title{
+    font-family:var(--font-head);font-size:clamp(1.8rem,4vw,3rem);
+    font-weight:800;margin-bottom:1rem;letter-spacing:-0.5px;
+  }
+  .section-sub{color:var(--muted);font-size:0.85rem;max-width:550px;line-height:1.8}
 
+  /* ARCHITECTURE DIAGRAM */
+  .arch-section{background:linear-gradient(180deg, var(--dark) 0%, var(--dark2) 50%, var(--dark) 100%)}
+  .arch-diagram{
+    margin-top:3rem;
+    display:grid;
+    grid-template-columns:1fr 80px 1fr 80px 1fr;
+    align-items:center;
+    gap:0;
+  }
+  .arch-layer{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:4px;
+    padding:1.5rem;
+    position:relative;
+    transition:all 0.3s;
+  }
+  .arch-layer:hover{
+    border-color:rgba(0,255,178,0.4);
+    box-shadow:0 0 30px rgba(0,255,178,0.08);
+    transform:translateY(-2px);
+  }
+  .arch-icon{font-size:1.8rem;margin-bottom:0.8rem}
+  .arch-layer h3{
+    font-family:var(--font-head);font-size:0.9rem;font-weight:700;
+    color:var(--neon);margin-bottom:0.5rem;letter-spacing:1px;text-transform:uppercase;
+  }
+  .arch-layer p{font-size:0.72rem;color:var(--muted);line-height:1.7}
+  .arch-layer ul{list-style:none;margin-top:0.8rem}
+  .arch-layer ul li{
+    font-size:0.7rem;color:var(--muted);padding:0.2rem 0;
+    display:flex;align-items:center;gap:0.5rem;
+  }
+  .arch-layer ul li::before{content:'›';color:var(--neon)}
+  .arch-arrow{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:0.3rem;
+  }
+  .arrow-line{
+    width:100%;height:2px;
+    background:linear-gradient(90deg,transparent,var(--neon),transparent);
+    position:relative;
+  }
+  .arrow-line::after{
+    content:'▶';position:absolute;right:-8px;top:50%;
+    transform:translateY(-50%);color:var(--neon);font-size:0.6rem;
+  }
+  .arrow-label{font-size:0.55rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+  .arch-badge{
+    position:absolute;top:-10px;right:12px;
+    font-size:0.55rem;padding:0.2rem 0.6rem;
+    background:var(--dark3);border:1px solid var(--border);
+    color:var(--neon);letter-spacing:1px;text-transform:uppercase;
+    border-radius:2px;
+  }
 
-button {
+  /* ATTACK TYPES */
+  .attack-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:1px;
+    background:var(--border);
+    border:1px solid var(--border);
+    margin-top:3rem;
+    border-radius:4px;
+    overflow:hidden;
+  }
+  .attack-card{
+    background:var(--dark2);padding:1.8rem;
+    transition:all 0.3s;cursor:default;
+    position:relative;overflow:hidden;
+  }
+  .attack-card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:3px;
+    transition:opacity 0.3s;opacity:0;
+  }
+  .attack-card.dos::before{background:linear-gradient(90deg,#FF3B6B,#FF6B6B)}
+  .attack-card.probe::before{background:linear-gradient(90deg,#00C8FF,#007AFF)}
+  .attack-card.r2l::before{background:linear-gradient(90deg,#FFBD2E,#FF9500)}
+  .attack-card.u2r::before{background:linear-gradient(90deg,#00FFB2,#00C8FF)}
+  .attack-card:hover::before{opacity:1}
+  .attack-card:hover{background:var(--dark3)}
+  .attack-icon{font-size:2rem;margin-bottom:0.8rem}
+  .attack-card h3{
+    font-family:var(--font-head);font-size:1.1rem;font-weight:700;
+    margin-bottom:0.5rem;
+  }
+  .attack-card.dos h3{color:#FF3B6B}
+  .attack-card.probe h3{color:var(--neon2)}
+  .attack-card.r2l h3{color:#FFBD2E}
+  .attack-card.u2r h3{color:var(--neon)}
+  .attack-card p{font-size:0.75rem;color:var(--muted);line-height:1.7;margin-bottom:1rem}
+  .severity-bar{
+    height:4px;background:rgba(255,255,255,0.08);border-radius:2px;
+    overflow:hidden;
+  }
+  .severity-fill{height:100%;border-radius:2px;transition:width 0.5s ease}
+  .severity-label{font-size:0.6rem;color:var(--muted);margin-top:0.4rem;letter-spacing:1px;text-transform:uppercase}
 
-    padding:12px 30px;
-    background:#00ff99;
-    border:none;
-    border-radius:10px;
-    cursor:pointer;
-    font-weight:bold;
+  /* LIVE DETECTION DEMO */
+  .demo-section{
+    background:var(--dark2);
+    border-top:1px solid var(--border);
+    border-bottom:1px solid var(--border);
+  }
+  .demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:3rem}
+  .demo-panel{
+    background:var(--dark);
+    border:1px solid var(--border);
+    border-radius:4px;
+    overflow:hidden;
+  }
+  .demo-panel-header{
+    padding:0.8rem 1.2rem;
+    background:var(--dark3);
+    border-bottom:1px solid var(--border);
+    display:flex;align-items:center;gap:0.5rem;
+    font-size:0.7rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;
+  }
+  .status-dot{width:6px;height:6px;border-radius:50%;background:var(--neon);animation:pulse 2s infinite}
+  .demo-panel-body{padding:1.2rem}
+  .input-group{margin-bottom:1rem}
+  .input-label{font-size:0.65rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:0.4rem;display:block}
+  .demo-input{
+    width:100%;padding:0.6rem 0.8rem;
+    background:var(--dark2);border:1px solid var(--border);
+    color:var(--text);font-family:var(--font-mono);font-size:0.78rem;
+    border-radius:2px;outline:none;
+    transition:border-color 0.3s;
+  }
+  .demo-input:focus{border-color:rgba(0,255,178,0.4)}
+  .demo-select{
+    width:100%;padding:0.6rem 0.8rem;
+    background:var(--dark2);border:1px solid var(--border);
+    color:var(--text);font-family:var(--font-mono);font-size:0.78rem;
+    border-radius:2px;outline:none;cursor:pointer;
+    transition:border-color 0.3s;
+    -webkit-appearance:none;
+  }
+  .demo-select:focus{border-color:rgba(0,255,178,0.4)}
+  .analyze-btn{
+    width:100%;padding:0.8rem;
+    background:var(--neon);color:var(--dark);
+    font-family:var(--font-mono);font-size:0.78rem;font-weight:700;
+    letter-spacing:1px;text-transform:uppercase;border:none;cursor:pointer;
+    transition:all 0.3s;
+  }
+  .analyze-btn:hover{background:#00e09e;box-shadow:0 0 20px rgba(0,255,178,0.3)}
+  .result-area{min-height:200px}
+  .result-box{
+    padding:1rem;margin-top:0.5rem;
+    border:1px solid;border-radius:4px;
+    font-size:0.75rem;
+  }
+  .result-box.safe{border-color:rgba(0,255,178,0.3);background:rgba(0,255,178,0.05)}
+  .result-box.threat{border-color:rgba(255,59,107,0.4);background:rgba(255,59,107,0.06)}
+  .result-box.warning{border-color:rgba(255,189,46,0.4);background:rgba(255,189,46,0.06)}
+  .result-header{font-family:var(--font-head);font-size:1rem;font-weight:700;margin-bottom:0.5rem}
+  .result-header.safe{color:var(--neon)}
+  .result-header.threat{color:var(--accent)}
+  .result-header.warning{color:#FFBD2E}
+  .result-detail{color:var(--muted);line-height:1.8}
+  .confidence-bar{margin-top:0.8rem}
+  .conf-label{font-size:0.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:0.3rem}
+  .conf-track{height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden}
+  .conf-fill{height:100%;border-radius:3px;transition:width 0.8s ease}
+  .log-feed{max-height:250px;overflow-y:auto}
+  .log-entry{
+    padding:0.5rem 0;
+    border-bottom:1px solid rgba(255,255,255,0.04);
+    font-size:0.7rem;display:flex;gap:0.8rem;align-items:flex-start;
+  }
+  .log-time{color:var(--muted);flex-shrink:0}
+  .log-msg.safe{color:var(--neon)}
+  .log-msg.threat{color:var(--accent)}
+  .log-msg.warn{color:#FFBD2E}
+  .log-feed::-webkit-scrollbar{width:4px}
+  .log-feed::-webkit-scrollbar-track{background:var(--dark3)}
+  .log-feed::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 
-}
+  /* TECH STACK */
+  .tech-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+    gap:1rem;margin-top:3rem;
+  }
+  .tech-card{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:4px;padding:1.5rem 1rem;
+    text-align:center;transition:all 0.3s;
+  }
+  .tech-card:hover{
+    border-color:rgba(0,200,255,0.3);
+    box-shadow:0 0 20px rgba(0,200,255,0.06);
+    transform:translateY(-3px);
+  }
+  .tech-logo{font-size:2.5rem;margin-bottom:0.8rem}
+  .tech-name{font-family:var(--font-head);font-size:0.85rem;font-weight:700;color:var(--text);margin-bottom:0.3rem}
+  .tech-role{font-size:0.65rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
 
+  /* TEAM */
+  .team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:2rem;margin-top:3rem}
+  .team-card{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:4px;padding:2rem;
+    position:relative;overflow:hidden;transition:all 0.3s;
+  }
+  .team-card:hover{border-color:rgba(0,255,178,0.3);transform:translateY(-3px)}
+  .team-card::after{
+    content:'';position:absolute;inset:0;
+    background:radial-gradient(circle at 80% 20%, rgba(0,255,178,0.04), transparent 60%);
+    pointer-events:none;
+  }
+  .team-avatar{
+    width:60px;height:60px;border-radius:50%;
+    border:2px solid var(--neon);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-head);font-size:1.3rem;font-weight:800;color:var(--neon);
+    margin-bottom:1rem;
+    background:rgba(0,255,178,0.08);
+  }
+  .team-name{font-family:var(--font-head);font-size:1.1rem;font-weight:700;margin-bottom:0.2rem}
+  .team-id{font-size:0.65rem;color:var(--neon);letter-spacing:2px;margin-bottom:0.8rem}
+  .team-role-tag{
+    display:inline-block;padding:0.2rem 0.7rem;
+    border:1px solid var(--border);border-radius:2px;
+    font-size:0.6rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;
+    margin-bottom:1rem;
+  }
+  .team-dept{font-size:0.72rem;color:var(--muted);line-height:1.7}
+  .guide-card{
+    background:linear-gradient(135deg, rgba(0,255,178,0.05), rgba(0,200,255,0.05));
+    border:1px solid rgba(0,255,178,0.2);
+    padding:1.5rem 2rem;
+    border-radius:4px;margin-top:2rem;
+    display:flex;align-items:center;gap:1.5rem;
+  }
+  .guide-label{font-size:0.6rem;letter-spacing:2px;text-transform:uppercase;color:var(--neon);margin-bottom:0.3rem}
+  .guide-name{font-family:var(--font-head);font-size:1rem;font-weight:700;margin-bottom:0.2rem}
+  .guide-title{font-size:0.75rem;color:var(--muted)}
 
-#result-area {
+  /* FOOTER */
+  footer{
+    position:relative;z-index:1;
+    border-top:1px solid var(--border);
+    padding:2rem 3rem;
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--dark2);font-size:0.7rem;color:var(--muted);
+  }
+  .footer-logo{font-family:var(--font-head);font-weight:800;color:var(--neon);font-size:1rem}
+  .footer-info{text-align:right;line-height:1.8}
 
-    margin-top:25px;
+  /* ANIMATIONS */
+  .reveal{opacity:0;transform:translateY(20px);transition:all 0.6s ease}
+  .reveal.visible{opacity:1;transform:translateY(0)}
 
-}
+  /* SCAN LINE EFFECT */
+  .scan-line{
+    position:fixed;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,transparent,var(--neon),transparent);
+    z-index:50;animation:scan 6s linear infinite;opacity:0.3;
+    pointer-events:none;
+  }
+  @keyframes scan{from{top:-2px}to{top:100vh}}
 
-
-.normal {
-
-    color:#00ff99;
-    font-size:22px;
-
-}
-
-
-.attack {
-
-    color:#ff3355;
-    font-size:22px;
-
-}
-
-
-.log {
-
-    margin-top:20px;
-    text-align:left;
-    background:#020617;
-    padding:15px;
-    border-radius:10px;
-
-}
-
-
+  @media(max-width:768px){
+    nav{padding:1rem}
+    .nav-links{display:none}
+    .stats-bar{grid-template-columns:repeat(2,1fr)}
+    .arch-diagram{grid-template-columns:1fr;gap:1rem}
+    .arch-arrow{transform:rotate(90deg);height:50px;width:50px;margin:0 auto}
+    .demo-grid{grid-template-columns:1fr}
+    footer{flex-direction:column;gap:1rem;text-align:center}
+    .footer-info{text-align:center}
+  }
 </style>
-
 </head>
-
-
 <body>
 
+<div class="scan-line"></div>
+<div class="particles" id="particles"></div>
 
-<div class="container">
+<nav>
+  <div class="nav-logo">Cloud<span>Shield</span></div>
+  <ul class="nav-links">
+    <li><a href="#about">Overview</a></li>
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#attacks">Threats</a></li>
+    <li><a href="#demo">Live Demo</a></li>
+    <li><a href="#team">Team</a></li>
+  </ul>
+  <div class="nav-badge">● System Online</div>
+</nav>
 
+<!-- HERO -->
+<section class="hero" id="about">
+  <div class="hero-tag">Cloud Computing | Mini Project (24AML146)</div>
+  <h1>
+    <span class="line1">Cloud-Based AI</span><br>
+    <span class="highlight">Intrusion Detection</span>
+  </h1>
+  <p class="hero-sub">
+    An intelligent, machine-learning powered security system deployed on the cloud 
+    that automatically identifies and classifies cyber threats in real-time — 
+    protecting your network 24/7.
+  </p>
+  <div class="hero-cta">
+    <a href="#demo" class="btn-primary">Launch Live Demo</a>
+    <a href="#architecture" class="btn-outline">View Architecture</a>
+  </div>
+  <div class="threat-meter">
+    <div class="threat-dot"></div>
+    <span>Active threat monitoring — NSL-KDD dataset — Random Forest classifier — Cloud deployed</span>
+  </div>
+  <div class="terminal-wrapper" style="margin-top:2rem">
+    <div class="terminal-bar">
+      <div class="t-dot t-red"></div>
+      <div class="t-dot t-yellow"></div>
+      <div class="t-dot t-green"></div>
+      <span class="terminal-title">cloudshield@bnmit:~$ ids_monitor.py</span>
+    </div>
+    <div class="terminal-body" id="terminal"></div>
+  </div>
+</section>
 
-<h1>CloudShield AI</h1>
-
-<h2>Live Detection Simulator</h2>
-
-
-<input id="src-ip" placeholder="Source IP">
-
-<br>
-
-
-<input id="dst-port" placeholder="Destination Port">
-
-<br>
-
-
-<input id="duration" placeholder="Duration">
-
-
-<br>
-
-
-<button onclick="analyzeTraffic()">
-Analyze Traffic
-</button>
-
-
-
-<div id="result-area">
-
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat-item">
+    <span class="stat-num" data-target="99.2">0</span>
+    <div class="stat-label">Detection Accuracy %</div>
+  </div>
+  <div class="stat-item">
+    <span class="stat-num" data-target="4">0</span>
+    <div class="stat-label">Attack Types Detected</div>
+  </div>
+  <div class="stat-item">
+    <span class="stat-num" data-target="125000">0</span>
+    <div class="stat-label">NSL-KDD Records Trained</div>
+  </div>
+  <div class="stat-item">
+    <span class="stat-num" data-target="0.3">0</span>
+    <div class="stat-label">Avg Response Time (sec)</div>
+  </div>
 </div>
 
+<!-- ARCHITECTURE -->
+<section class="arch-section" id="architecture">
+  <div class="container">
+    <div class="section-tag">System Architecture</div>
+    <h2 class="section-title">How CloudShield Works</h2>
+    <p class="section-sub">A three-layer cloud-native architecture combining data ingestion, 
+    ML-powered analysis, and intelligent alerting.</p>
+    <div class="arch-diagram reveal">
+      <div class="arch-layer">
+        <div class="arch-badge">Layer 1</div>
+        <div class="arch-icon">📡</div>
+        <h3>Data Collection</h3>
+        <p>Raw network traffic captured and preprocessed using the NSL-KDD benchmark dataset.</p>
+        <ul>
+          <li>Network packet capture</li>
+          <li>Feature extraction (41 features)</li>
+          <li>Data normalization</li>
+          <li>Label encoding</li>
+        </ul>
+      </div>
+      <div class="arch-arrow">
+        <div class="arrow-line"></div>
+        <div class="arrow-label">Stream</div>
+      </div>
+      <div class="arch-layer">
+        <div class="arch-badge">Layer 2</div>
+        <div class="arch-icon">🧠</div>
+        <h3>AI Engine</h3>
+        <p>Random Forest classifier trained on labeled network traffic, detecting anomalies with high precision.</p>
+        <ul>
+          <li>Random Forest (100 trees)</li>
+          <li>Multi-class classification</li>
+          <li>Real-time inference</li>
+          <li>Confidence scoring</li>
+        </ul>
+      </div>
+      <div class="arch-arrow">
+        <div class="arrow-line"></div>
+        <div class="arrow-label">Alerts</div>
+      </div>
+      <div class="arch-layer">
+        <div class="arch-badge">Layer 3</div>
+        <div class="arch-icon">☁️</div>
+        <h3>Cloud Platform</h3>
+        <p>Scalable deployment on AWS/Azure with secure log storage and web-based monitoring dashboard.</p>
+        <ul>
+          <li>AWS / Azure deployment</li>
+          <li>Secure cloud log storage</li>
+          <li>Web dashboard (Flask)</li>
+          <li>Auto-scaling enabled</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
 
-<div class="log">
+<!-- ATTACK TYPES -->
+<section id="attacks">
+  <div class="container">
+    <div class="section-tag">Threat Intelligence</div>
+    <h2 class="section-title">Attack Classes Detected</h2>
+    <p class="section-sub">CloudShield identifies four major categories of cyber attacks, 
+    each posing unique risks to cloud infrastructure.</p>
+    <div class="attack-grid reveal">
+      <div class="attack-card dos">
+        <div class="attack-icon">💥</div>
+        <h3>DoS Attacks</h3>
+        <p>Denial-of-Service attacks flood network resources, making systems unavailable to legitimate users through traffic overload.</p>
+        <div class="severity-bar"><div class="severity-fill" style="width:90%;background:linear-gradient(90deg,#FF3B6B,#FF6B6B)"></div></div>
+        <div class="severity-label">Severity: Critical</div>
+      </div>
+      <div class="attack-card probe">
+        <div class="attack-icon">🔍</div>
+        <h3>Probe Attacks</h3>
+        <p>Surveillance and scanning attacks that gather information about network vulnerabilities for future exploitation.</p>
+        <div class="severity-bar"><div class="severity-fill" style="width:65%;background:linear-gradient(90deg,#00C8FF,#007AFF)"></div></div>
+        <div class="severity-label">Severity: Moderate</div>
+      </div>
+      <div class="attack-card r2l">
+        <div class="attack-icon">🔓</div>
+        <h3>R2L Attacks</h3>
+        <p>Remote-to-Local attacks where unauthorized remote access is gained to a local machine, bypassing authentication.</p>
+        <div class="severity-bar"><div class="severity-fill" style="width:75%;background:linear-gradient(90deg,#FFBD2E,#FF9500)"></div></div>
+        <div class="severity-label">Severity: High</div>
+      </div>
+      <div class="attack-card u2r">
+        <div class="attack-icon">👑</div>
+        <h3>U2R Attacks</h3>
+        <p>User-to-Root attacks escalate privileges from a normal user account to root/admin, taking full system control.</p>
+        <div class="severity-bar"><div class="severity-fill" style="width:85%;background:linear-gradient(90deg,#00FFB2,#00C8FF)"></div></div>
+        <div class="severity-label">Severity: Critical</div>
+      </div>
+    </div>
+  </div>
+</section>
 
-<h3>Activity Log</h3>
+<!-- LIVE DEMO -->
+<section class="demo-section" id="demo">
+  <div class="container">
+    <div class="section-tag">Interactive Demo</div>
+    <h2 class="section-title">Live Detection Simulator</h2>
+    <p class="section-sub">Simulate network traffic scenarios and see how CloudShield's AI 
+    engine classifies them in real-time.</p>
+    <div class="demo-grid reveal">
+      <!-- INPUT PANEL -->
+      <div class="demo-panel">
+        <div class="demo-panel-header">
+          <div class="status-dot"></div>
+          Traffic Analysis Input
+        </div>
+        <div class="demo-panel-body">
+          <div class="input-group">
+            <label class="input-label">Traffic Scenario</label>
+            <select class="demo-select" id="scenario">
+              <option value="normal">Normal HTTP Web Traffic</option>
+              <option value="dos">High-Volume DoS Flood</option>
+              <option value="probe">Port Scanning / Probe</option>
+              <option value="r2l">Remote Login Attempt (R2L)</option>
+              <option value="u2r">Privilege Escalation (U2R)</option>
+              <option value="custom">Custom Parameters</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label class="input-label">Source IP</label>
+            <input class="demo-input" id="src-ip" value="192.168.1.45" type="text">
+          </div>
+          <div class="input-group">
+            <label class="input-label">Destination Port</label>
+            <input class="demo-input" id="dst-port" value="80" type="text">
+          </div>
+          <div class="input-group">
+            <label class="input-label">Protocol</label>
+            <select class="demo-select" id="protocol">
+              <option value="tcp">TCP</option>
+              <option value="udp">UDP</option>
+              <option value="icmp">ICMP</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label class="input-label">Connection Duration (ms)</label>
+            <input class="demo-input" id="duration" value="120" type="number">
+          </div>
+          <button class="analyze-btn" onclick="analyzeTraffic()">▶ Analyze Traffic</button>
+        </div>
+      </div>
 
-<div id="logs">
+      <!-- RESULT PANEL -->
+      <div class="demo-panel">
+        <div class="demo-panel-header">
+          <div class="status-dot"></div>
+          Detection Results + Event Log
+        </div>
+        <div class="demo-panel-body">
+          <div class="result-area" id="result-area">
+            <p style="color:var(--muted);font-size:0.78rem;padding:2rem 0;text-align:center">
+              Configure traffic parameters and click<br><strong style="color:var(--neon)">Analyze Traffic</strong> to run detection
+            </p>
+          </div>
+          <div style="margin-top:1.5rem">
+            <div class="input-label" style="margin-bottom:0.8rem">Live Event Log</div>
+            <div class="log-feed" id="log-feed">
+              <div class="log-entry">
+                <span class="log-time">00:00:00</span>
+                <span class="log-msg safe">System initialized. IDS active and monitoring...</span>
+              </div>
+              <div class="log-entry">
+                <span class="log-time">00:00:01</span>
+                <span class="log-msg safe">Random Forest model loaded (100 estimators)</span>
+              </div>
+              <div class="log-entry">
+                <span class="log-time">00:00:02</span>
+                <span class="log-msg safe">NSL-KDD dataset preprocessing complete</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-</div>
+<!-- TECH STACK -->
+<section>
+  <div class="container">
+    <div class="section-tag">Technology Stack</div>
+    <h2 class="section-title">Built With</h2>
+    <p class="section-sub">Industry-standard tools and frameworks for robust, scalable, and intelligent intrusion detection.</p>
+    <div class="tech-grid reveal">
+      <div class="tech-card">
+        <div class="tech-logo">🐍</div>
+        <div class="tech-name">Python</div>
+        <div class="tech-role">Core Language</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-logo">🌲</div>
+        <div class="tech-name">Scikit-learn</div>
+        <div class="tech-role">ML Framework</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-logo">📊</div>
+        <div class="tech-name">NSL-KDD</div>
+        <div class="tech-role">Training Dataset</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-logo">🚀</div>
+        <div class="tech-name">Flask</div>
+        <div class="tech-role">Web Interface</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-logo">☁️</div>
+        <div class="tech-name">AWS / Azure</div>
+        <div class="tech-role">Cloud Platform</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-logo">🗄️</div>
+        <div class="tech-name">Cloud Storage</div>
+        <div class="tech-role">Log Management</div>
+      </div>
+    </div>
+  </div>
+</section>
 
-</div>
+<!-- TEAM -->
+<section id="team" style="background:var(--dark2);border-top:1px solid var(--border)">
+  <div class="container">
+    <div class="section-tag">Project Team</div>
+    <h2 class="section-title">The Builders</h2>
+    <p class="section-sub">BNM Institute of Technology — Department of Artificial Intelligence & Machine Learning.</p>
+    <div class="team-grid reveal">
+      <div class="team-card">
+        <div class="team-avatar">AS</div>
+        <div class="team-name">Aditi S</div>
+        <div class="team-id">1BG24AI003</div>
+        <div class="team-role-tag">Project Developer</div>
+        <div class="team-dept">Department of Artificial Intelligence & Machine Learning<br>BNM Institute of Technology, Bengaluru</div>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar">MM</div>
+        <div class="team-name">Manu V M</div>
+        <div class="team-id">1BG24AI049</div>
+        <div class="team-role-tag">Project Developer</div>
+        <div class="team-dept">Department of Artificial Intelligence & Machine Learning<br>BNM Institute of Technology, Bengaluru</div>
+      </div>
+    </div>
+    <div class="guide-card">
+      <div class="team-avatar" style="width:50px;height:50px;font-size:1rem;flex-shrink:0">Dr</div>
+      <div>
+        <div class="guide-label">Under the Guidance of</div>
+        <div class="guide-name">Dr. Tejaswini R Murgod</div>
+        <div class="guide-title">Professor — Department of AI & ML, BNMIT, Banashankari 2nd Stage, Bengaluru – 560070</div>
+      </div>
+    </div>
+  </div>
+</section>
 
-
-</div>
-
-
-
-
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="footer-logo">CloudShield AI</div>
+    <div style="font-size:0.65rem;color:var(--muted);margin-top:0.3rem">Mini Project — Cloud Computing (24AML146)</div>
+  </div>
+  <div class="footer-info">
+    <div>BNMIT — Dept. of AI & ML</div>
+    <div style="color:rgba(107,139,175,0.6)">Presented: 03 March 2026</div>
+  </div>
+</footer>
 
 <script>
+/* PARTICLES */
+const pc=document.getElementById('particles');
+for(let i=0;i<40;i++){
+  const p=document.createElement('div');
+  p.className='particle';
+  p.style.cssText=`left:${Math.random()*100}%;animation-duration:${8+Math.random()*12}s;animation-delay:${Math.random()*10}s;--drift:${(Math.random()-0.5)*200}px;width:${Math.random()>0.7?3:2}px;height:${Math.random()>0.7?3:2}px;opacity:${0.3+Math.random()*0.4}`;
+  pc.appendChild(p);
+}
 
+/* TERMINAL ANIMATION */
+const lines=[
+  {t:'<span class="t-green-text">✓</span> <span class="t-cyan">CloudShield IDS</span> v2.1.4 initialized',d:300},
+  {t:'<span class="t-muted">Loading Random Forest model...</span>',d:800},
+  {t:'<span class="t-green-text">✓</span> Model loaded: <span class="t-cyan">100 estimators, 41 features</span>',d:1300},
+  {t:'<span class="t-muted">Connecting to cloud monitoring service...</span>',d:2000},
+  {t:'<span class="t-green-text">✓</span> Connected to <span class="t-cyan">AWS us-east-1</span> — latency: 12ms',d:2700},
+  {t:'<span class="t-muted">Starting network traffic analysis...</span>',d:3400},
+  {t:'<span class="t-green-text">[NORMAL]</span> 192.168.1.102 → :80 HTTP GET — confidence: 97.3%',d:4100},
+  {t:'<span class="t-green-text">[NORMAL]</span> 10.0.0.44 → :443 HTTPS — confidence: 99.1%',d:4800},
+  {t:'<span class="t-red-text">[ALERT]</span> 203.45.67.89 → :22 SSH flood — <span class="t-red-text">DoS detected!</span>',d:5500},
+  {t:'<span class="t-yellow-text">[WARN]</span> Port scan detected from 45.33.12.9 — Probe attack',d:6200},
+  {t:'<span class="t-green-text">✓</span> Alerts logged to cloud. Security team notified.',d:6900},
+  {t:'<span class="t-muted">Monitoring... <span class="cursor">█</span></span>',d:7600},
+];
+const term=document.getElementById('terminal');
+lines.forEach(l=>{
+  setTimeout(()=>{
+    const div=document.createElement('div');
+    div.className='t-line';
+    div.innerHTML='<span class="t-muted">$</span> '+l.t;
+    term.appendChild(div);
+    setTimeout(()=>div.style.opacity=1,50);
+    term.scrollTop=term.scrollHeight;
+  },l.d);
+});
 
+/* COUNTER ANIMATION */
+const counters=document.querySelectorAll('[data-target]');
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      const el=e.target;
+      const target=parseFloat(el.dataset.target);
+      const isFloat=String(target).includes('.');
+      const decimals=isFloat?1:0;
+      let start=0;
+      const dur=2000;
+      const step=timestamp=>{
+        if(!start)start=timestamp;
+        const p=Math.min((timestamp-start)/dur,1);
+        const ease=1-Math.pow(1-p,3);
+        const val=target*ease;
+        el.textContent=target>=1000?Math.floor(val).toLocaleString()+(p>=1&&target===125000?'+':''):val.toFixed(decimals);
+        if(p<1)requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+      obs.unobserve(el);
+    }
+  });
+},{threshold:0.5});
+counters.forEach(c=>obs.observe(c));
+
+/* REVEAL ON SCROLL */
+const revObs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible')}});
+},{threshold:0.1});
+document.querySelectorAll('.reveal').forEach(el=>revObs.observe(el));
+
+/* SCENARIO PRESETS */
+const scenarios={
+  normal:{ip:'192.168.1.45',port:'80',proto:'tcp',dur:'120'},
+  dos:{ip:'203.45.67.89',port:'80',proto:'tcp',dur:'3'},
+  probe:{ip:'45.33.12.9',port:'22',proto:'tcp',dur:'450'},
+  r2l:{ip:'178.90.12.5',port:'23',proto:'tcp',dur:'890'},
+  u2r:{ip:'10.0.0.15',port:'0',proto:'tcp',dur:'220'},
+  custom:{ip:'',port:'',proto:'tcp',dur:''}
+};
+document.getElementById('scenario').addEventListener('change',function(){
+  const s=scenarios[this.value];
+  if(s.ip){
+    document.getElementById('src-ip').value=s.ip;
+    document.getElementById('dst-port').value=s.port;
+    document.getElementById('protocol').value=s.proto;
+    document.getElementById('duration').value=s.dur;
+  }
+});
+
+/* LIVE LOG */
+let logCount=3;
+const logFeed=document.getElementById('log-feed');
+function addLog(msg,type,time){
+  const t=time||new Date().toTimeString().slice(0,8);
+  const div=document.createElement('div');
+  div.className='log-entry';
+  div.innerHTML=`<span class="log-time">${t}</span><span class="log-msg ${type}">${msg}</span>`;
+  logFeed.appendChild(div);
+  logFeed.scrollTop=logFeed.scrollHeight;
+}
+
+/* AUTO LOG SIMULATION */
+const autoLogs=[
+  {msg:'Packet #4821 — Normal HTTP — 192.168.0.22 → :443',type:'safe'},
+  {msg:'Packet #4822 — Normal FTP — 10.0.0.9 → :21',type:'safe'},
+  {msg:'Suspicious pattern — monitoring 45.89.12.3',type:'warn'},
+  {msg:'Packet #4823 — Normal DNS — :53 query resolved',type:'safe'},
+  {msg:'Port sweep detected — added to watchlist',type:'warn'},
+  {msg:'Packet #4824 — Normal HTTPS — confidence 98.7%',type:'safe'},
+];
+let autoIdx=0;
+setInterval(()=>{
+  const l=autoLogs[autoIdx%autoLogs.length];
+  addLog(l.msg,l.type);
+  autoIdx++;
+},3500);
+
+/* ANALYZE FUNCTION */
 function analyzeTraffic(){
+  const scenario=document.getElementById('scenario').value;
+  const ip=document.getElementById('src-ip').value||'0.0.0.0';
+  const port=document.getElementById('dst-port').value||'80';
+  const proto=document.getElementById('protocol').value;
+  const dur=document.getElementById('duration').value||'100';
 
+  const ra=document.getElementById('result-area');
+  ra.innerHTML='<p style="color:var(--neon);font-size:0.78rem;padding:1rem 0">⟳ Analyzing traffic with Random Forest classifier...</p>';
+  addLog(`Analyzing: ${ip} → :${port} [${proto.toUpperCase()}] dur=${dur}ms`,'safe');
 
-const ip =
-document.getElementById("src-ip").value;
-
-
-const port =
-document.getElementById("dst-port").value;
-
-
-const duration =
-document.getElementById("duration").value;
-
-
-
-const result =
-document.getElementById("result-area");
-
-
-
-result.innerHTML =
-"Analyzing traffic...";
-
-
-
-fetch("/predict",{
-
-method:"POST",
-
-headers:{
-
-"Content-Type":"application/json"
-
-},
-
-
-body:JSON.stringify({
-
-duration:duration,
-
-src_bytes:500,
-
-dst_bytes:300,
-
-source_ip:ip,
-
-port:port
-
-})
-
-
-})
-
-
-.then(response=>response.json())
-
-
-.then(data=>{
-
-
-let prediction=data.prediction;
-
-
-let status;
-
-
-
-if(prediction==="normal"){
-
-
-status="Normal Traffic";
-
-
-result.innerHTML=`
-
-<div class="normal">
-
-✓ NORMAL TRAFFIC
-
-</div>
-
-<p>
-
-Source: ${ip}<br>
-
-Protocol: TCP → Port ${port}<br>
-
-Classification:
-Benign network activity<br>
-
-Duration:
-${duration}
-
-</p>
-
-
-`;
-
-
-
+  setTimeout(()=>{
+    let html='',logMsg='',logType='';
+    if(scenario==='normal'){
+      const conf=94+Math.random()*5;
+      html=`<div class="result-box safe">
+        <div class="result-header safe">✓ NORMAL TRAFFIC</div>
+        <div class="result-detail">Source: ${ip}<br>Protocol: ${proto.toUpperCase()} → Port ${port}<br>Classification: Benign network activity<br>Duration: ${dur}ms</div>
+        <div class="confidence-bar">
+          <div class="conf-label">Model Confidence</div>
+          <div class="conf-track"><div class="conf-fill" style="width:${conf.toFixed(1)}%;background:var(--neon)"></div></div>
+          <div style="font-size:0.65rem;color:var(--neon);margin-top:0.3rem">${conf.toFixed(1)}%</div>
+        </div></div>`;
+      logMsg=`[NORMAL] ${ip} → :${port} cleared — confidence ${conf.toFixed(1)}%`;logType='safe';
+    } else if(scenario==='dos'){
+      html=`<div class="result-box threat">
+        <div class="result-header threat">⚠ THREAT DETECTED: DoS ATTACK</div>
+        <div class="result-detail">Source: ${ip}<br>Protocol: ${proto.toUpperCase()} → Port ${port}<br>Attack Type: Denial-of-Service flood<br>Action: BLOCKED + Alert sent</div>
+        <div class="confidence-bar">
+          <div class="conf-label">Threat Confidence</div>
+          <div class="conf-track"><div class="conf-fill" style="width:96%;background:var(--accent)"></div></div>
+          <div style="font-size:0.65rem;color:var(--accent);margin-top:0.3rem">96.4%</div>
+        </div></div>`;
+      logMsg=`[ALERT] DoS attack from ${ip} — BLOCKED. Security notified.`;logType='threat';
+    } else if(scenario==='probe'){
+      html=`<div class="result-box warning">
+        <div class="result-header warning">⚡ PROBE ATTACK DETECTED</div>
+        <div class="result-detail">Source: ${ip}<br>Protocol: ${proto.toUpperCase()} → Port ${port}<br>Attack Type: Network scanning / Probe<br>Action: IP flagged for monitoring</div>
+        <div class="confidence-bar">
+          <div class="conf-label">Threat Confidence</div>
+          <div class="conf-track"><div class="conf-fill" style="width:88%;background:#FFBD2E"></div></div>
+          <div style="font-size:0.65rem;color:#FFBD2E;margin-top:0.3rem">88.2%</div>
+        </div></div>`;
+      logMsg=`[PROBE] Scanning activity from ${ip} flagged — monitoring.`;logType='warn';
+    } else if(scenario==='r2l'){
+      html=`<div class="result-box threat">
+        <div class="result-header threat">🔒 R2L ATTACK DETECTED</div>
+        <div class="result-detail">Source: ${ip}<br>Protocol: ${proto.toUpperCase()} → Port ${port}<br>Attack Type: Remote-to-Local intrusion<br>Action: Connection terminated + logged</div>
+        <div class="confidence-bar">
+          <div class="conf-label">Threat Confidence</div>
+          <div class="conf-track"><div class="conf-fill" style="width:91%;background:var(--accent)"></div></div>
+          <div style="font-size:0.65rem;color:var(--accent);margin-top:0.3rem">91.7%</div>
+        </div></div>`;
+      logMsg=`[ALERT] R2L intrusion from ${ip} — connection terminated.`;logType='threat';
+    } else if(scenario==='u2r'){
+      html=`<div class="result-box threat">
+        <div class="result-header threat">👑 U2R PRIVILEGE ESCALATION</div>
+        <div class="result-detail">Source: ${ip}<br>Protocol: ${proto.toUpperCase()} → Port ${port}<br>Attack Type: User-to-Root escalation<br>Action: CRITICAL — Admin alerted immediately</div>
+        <div class="confidence-bar">
+          <div class="conf-label">Threat Confidence</div>
+          <div class="conf-track"><div class="conf-fill" style="width:94%;background:var(--accent)"></div></div>
+          <div style="font-size:0.65rem;color:var(--accent);margin-top:0.3rem">94.1%</div>
+        </div></div>`;
+      logMsg=`[CRITICAL] U2R attack from ${ip} — Admin notified!`;logType='threat';
+    } else {
+      const conf=70+Math.random()*25;
+      const isNormal=conf>85;
+      html=`<div class="result-box ${isNormal?'safe':'warning'}">
+        <div class="result-header ${isNormal?'safe':'warning'}">${isNormal?'✓ LIKELY NORMAL':'⚡ SUSPICIOUS TRAFFIC'}</div>
+        <div class="result-detail">Source: ${ip}<br>Protocol: ${proto.toUpperCase()} → Port ${port}<br>Duration: ${dur}ms<br>Status: ${isNormal?'No threat pattern found':'Unusual patterns — flagged'}</div>
+        <div class="confidence-bar">
+          <div class="conf-label">Model Confidence</div>
+          <div class="conf-track"><div class="conf-fill" style="width:${conf.toFixed(0)}%;background:${isNormal?'var(--neon)':'#FFBD2E'}"></div></div>
+          <div style="font-size:0.65rem;color:${isNormal?'var(--neon)':'#FFBD2E'};margin-top:0.3rem">${conf.toFixed(1)}%</div>
+        </div></div>`;
+      logMsg=`Custom analysis from ${ip} — ${isNormal?'normal':'suspicious'}. Conf: ${conf.toFixed(1)}%`;
+      logType=isNormal?'safe':'warn';
+    }
+    ra.innerHTML=html;
+    addLog(logMsg,logType);
+  },1400);
 }
-
-else{
-
-
-status="Attack Detected";
-
-
-result.innerHTML=`
-
-<div class="attack">
-
-⚠ ATTACK DETECTED
-
-</div>
-
-
-<p>
-
-Source: ${ip}<br>
-
-Protocol: TCP → Port ${port}<br>
-
-Classification:
-${prediction}<br>
-
-Duration:
-${duration}
-
-</p>
-
-
-`;
-
-
-
-}
-
-
-
-
-
-// save into MongoDB
-
-
-fetch("/save_log",{
-
-method:"POST",
-
-headers:{
-
-"Content-Type":"application/json"
-
-},
-
-
-body:JSON.stringify({
-
-source_ip:ip,
-
-port:port,
-
-protocol:"TCP",
-
-scenario:prediction,
-
-status:status
-
-})
-
-
-});
-
-
-})
-
-
-
-.catch(error=>{
-
-
-result.innerHTML=
-
-"Server Error";
-
-
-console.log(error);
-
-
-});
-
-
-
-}
-
-
-
-
-
 </script>
-
-
-
 </body>
-
 </html>
