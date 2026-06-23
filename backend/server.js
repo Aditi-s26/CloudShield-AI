@@ -10,7 +10,7 @@ app.use(express.json());
 
 // MongoDB Atlas connection
 mongoose.connect(
-"mongodb+srv://cloudshieldadmin:CloudShield@cluster0.knbcq78.mongodb.net/?appName=Cluster0"
+"mongodb+srv://cloudshield1234:CloudShield@cluster0.knbcq78.mongodb.net/?appName=Cluster0"
 )
 .then(()=>{
     console.log("MongoDB Connected");
