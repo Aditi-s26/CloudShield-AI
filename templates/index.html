@@ -958,87 +958,150 @@ setInterval(()=>{
 },3500);
 
 /* ANALYZE FUNCTION */
-function analyzeTraffic(){
-  const scenario=document.getElementById('scenario').value;
-  const ip=document.getElementById('src-ip').value||'0.0.0.0';
-  const port=document.getElementById('dst-port').value||'80';
-  const proto=document.getElementById('protocol').value;
-  const dur=document.getElementById('duration').value||'100';
+function analyzeTraffic() {
 
-  const ra=document.getElementById('result-area');
-  ra.innerHTML='<p style="color:var(--neon);font-size:0.78rem;padding:1rem 0">⟳ Analyzing traffic with Random Forest classifier...</p>';
-  addLog(`Analyzing: ${ip} → :${port} [${proto.toUpperCase()}] dur=${dur}ms`,'safe');
+    const ip = document.getElementById('src-ip').value;
+    const port = document.getElementById('dst-port').value;
+    const duration = document.getElementById('duration').value;
 
-  setTimeout(()=>{
-    let html='',logMsg='',logType='';
-    if(scenario==='normal'){
-      const conf=94+Math.random()*5;
-      html=`<div class="result-box safe">
-        <div class="result-header safe">✓ NORMAL TRAFFIC</div>
-        <div class="result-detail">Source: ${ip}<br>Protocol: ${proto.toUpperCase()} → Port ${port}<br>Classification: Benign network activity<br>Duration: ${dur}ms</div>
-        <div class="confidence-bar">
-          <div class="conf-label">Model Confidence</div>
-          <div class="conf-track"><div class="conf-fill" style="width:${conf.toFixed(1)}%;background:var(--neon)"></div></div>
-          <div style="font-size:0.65rem;color:var(--neon);margin-top:0.3rem">${conf.toFixed(1)}%</div>
-        </div></div>`;
-      logMsg=`[NORMAL] ${ip} → :${port} cleared — confidence ${conf.toFixed(1)}%`;logType='safe';
-    } else if(scenario==='dos'){
-      html=`<div class="result-box threat">
-        <div class="result-header threat">⚠ THREAT DETECTED: DoS ATTACK</div>
-        <div class="result-detail">Source: ${ip}<br>Protocol: ${proto.toUpperCase()} → Port ${port}<br>Attack Type: Denial-of-Service flood<br>Action: BLOCKED + Alert sent</div>
-        <div class="confidence-bar">
-          <div class="conf-label">Threat Confidence</div>
-          <div class="conf-track"><div class="conf-fill" style="width:96%;background:var(--accent)"></div></div>
-          <div style="font-size:0.65rem;color:var(--accent);margin-top:0.3rem">96.4%</div>
-        </div></div>`;
-      logMsg=`[ALERT] DoS attack from ${ip} — BLOCKED. Security notified.`;logType='threat';
-    } else if(scenario==='probe'){
-      html=`<div class="result-box warning">
-        <div class="result-header warning">⚡ PROBE ATTACK DETECTED</div>
-        <div class="result-detail">Source: ${ip}<br>Protocol: ${proto.toUpperCase()} → Port ${port}<br>Attack Type: Network scanning / Probe<br>Action: IP flagged for monitoring</div>
-        <div class="confidence-bar">
-          <div class="conf-label">Threat Confidence</div>
-          <div class="conf-track"><div class="conf-fill" style="width:88%;background:#FFBD2E"></div></div>
-          <div style="font-size:0.65rem;color:#FFBD2E;margin-top:0.3rem">88.2%</div>
-        </div></div>`;
-      logMsg=`[PROBE] Scanning activity from ${ip} flagged — monitoring.`;logType='warn';
-    } else if(scenario==='r2l'){
-      html=`<div class="result-box threat">
-        <div class="result-header threat">🔒 R2L ATTACK DETECTED</div>
-        <div class="result-detail">Source: ${ip}<br>Protocol: ${proto.toUpperCase()} → Port ${port}<br>Attack Type: Remote-to-Local intrusion<br>Action: Connection terminated + logged</div>
-        <div class="confidence-bar">
-          <div class="conf-label">Threat Confidence</div>
-          <div class="conf-track"><div class="conf-fill" style="width:91%;background:var(--accent)"></div></div>
-          <div style="font-size:0.65rem;color:var(--accent);margin-top:0.3rem">91.7%</div>
-        </div></div>`;
-      logMsg=`[ALERT] R2L intrusion from ${ip} — connection terminated.`;logType='threat';
-    } else if(scenario==='u2r'){
-      html=`<div class="result-box threat">
-        <div class="result-header threat">👑 U2R PRIVILEGE ESCALATION</div>
-        <div class="result-detail">Source: ${ip}<br>Protocol: ${proto.toUpperCase()} → Port ${port}<br>Attack Type: User-to-Root escalation<br>Action: CRITICAL — Admin alerted immediately</div>
-        <div class="confidence-bar">
-          <div class="conf-label">Threat Confidence</div>
-          <div class="conf-track"><div class="conf-fill" style="width:94%;background:var(--accent)"></div></div>
-          <div style="font-size:0.65rem;color:var(--accent);margin-top:0.3rem">94.1%</div>
-        </div></div>`;
-      logMsg=`[CRITICAL] U2R attack from ${ip} — Admin notified!`;logType='threat';
+    const ra = document.getElementById('result-area');
+
+    ra.innerHTML =
+    '<p style="color:var(--neon);font-size:0.78rem;padding:1rem 0">⟳ Analyzing traffic...</p>';
+
+    addLog(`Analyzing: ${ip} → :${port}`, 'safe');
+
+    fetch('/predict', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            duration: duration,
+            src_bytes: 500,
+            dst_bytes: 300,
+            source_ip: ip,
+            port: port
+        })
+    })
+    .then(response => response.json())
+
+.then(data => {
+
+    let prediction = data.prediction;
+    let status;
+
+
+    if (prediction === "normal") {
+
+        status = "Normal Traffic";
+
+
+        ra.innerHTML = `
+        <div class="result-box safe">
+            <div class="result-header safe">
+                ✓ NORMAL TRAFFIC
+            </div>
+
+            <div class="result-detail">
+                Source IP: ${ip}<br>
+                Port: ${port}<br>
+                Status: No attack detected
+            </div>
+        </div>
+        `;
+
+
+        addLog(`[NORMAL] ${ip} → :${port} cleared`, 'safe');
+
+
     } else {
-      const conf=70+Math.random()*25;
-      const isNormal=conf>85;
-      html=`<div class="result-box ${isNormal?'safe':'warning'}">
-        <div class="result-header ${isNormal?'safe':'warning'}">${isNormal?'✓ LIKELY NORMAL':'⚡ SUSPICIOUS TRAFFIC'}</div>
-        <div class="result-detail">Source: ${ip}<br>Protocol: ${proto.toUpperCase()} → Port ${port}<br>Duration: ${dur}ms<br>Status: ${isNormal?'No threat pattern found':'Unusual patterns — flagged'}</div>
-        <div class="confidence-bar">
-          <div class="conf-label">Model Confidence</div>
-          <div class="conf-track"><div class="conf-fill" style="width:${conf.toFixed(0)}%;background:${isNormal?'var(--neon)':'#FFBD2E'}"></div></div>
-          <div style="font-size:0.65rem;color:${isNormal?'var(--neon)':'#FFBD2E'};margin-top:0.3rem">${conf.toFixed(1)}%</div>
-        </div></div>`;
-      logMsg=`Custom analysis from ${ip} — ${isNormal?'normal':'suspicious'}. Conf: ${conf.toFixed(1)}%`;
-      logType=isNormal?'safe':'warn';
+
+
+        status = "Attack Detected";
+
+
+        ra.innerHTML = `
+        <div class="result-box threat">
+            <div class="result-header threat">
+                ⚠ ATTACK DETECTED
+            </div>
+
+            <div class="result-detail">
+                Source IP: ${ip}<br>
+                Port: ${port}<br>
+                Status: Attack Detected
+            </div>
+        </div>
+        `;
+
+
+        addLog(`[ALERT] Attack detected from ${ip}`, 'threat');
+
     }
-    ra.innerHTML=html;
-    addLog(logMsg,logType);
-  },1400);
+
+
+
+    // SAVE DATA TO MONGODB
+
+    fetch('/save_log', {
+
+        method: 'POST',
+
+        headers: {
+            'Content-Type': 'application/json'
+        },
+
+        body: JSON.stringify({
+
+            source_ip: ip,
+
+            port: port,
+
+            protocol: "TCP",
+
+            scenario: prediction,
+
+            status: status
+
+        })
+
+    })
+
+    .then(response => response.json())
+
+    .then(result => {
+
+        console.log("MongoDB:", result.message);
+
+    })
+
+    .catch(error => {
+
+        console.error("MongoDB save error:", error);
+
+    });
+
+
+})
+    .catch(error => {
+
+        console.error(error);
+
+        ra.innerHTML = `
+        <div class="result-box threat">
+            <div class="result-header threat">
+                Server Error
+            </div>
+
+            <div class="result-detail">
+                Could not connect to Flask backend.
+            </div>
+        </div>
+        `;
+
+        addLog('Backend connection failed', 'threat');
+    });
 }
 </script>
 </body>
