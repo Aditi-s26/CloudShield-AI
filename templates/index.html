@@ -1077,30 +1077,21 @@ function analyzeTraffic() {
     })
 
     .catch(error => {
+      console.error("ERROR:", error);
 
-        console.error("MongoDB save error:", error);
-
-    });
-
-
-})
-    .catch(error => {
-
-        console.error(error);
-
-        ra.innerHTML = `
-        <div class="result-box threat">
-            <div class="result-header threat">
-                Server Error
-            </div>
-
-            <div class="result-detail">
-                Could not connect to Flask backend.
-            </div>
+    ra.innerHTML = `
+    <div class="result-box threat">
+        <div class="result-header threat">
+            Server Error
         </div>
-        `;
 
-        addLog('Backend connection failed', 'threat');
+        <div class="result-detail">
+            ${error}
+        </div>
+    </div>
+    `;
+
+
     });
 }
 </script>
