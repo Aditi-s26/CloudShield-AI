@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 from pymongo import MongoClient
 from datetime import datetime
+from urllib.parse import quote_plus
 import joblib
 import numpy as np
 
@@ -9,9 +10,17 @@ app = Flask(__name__)
 model = joblib.load("model.pkl")
 
 # MongoDB Atlas
-MONGO_URI = "mongodb+srv://cloudshield1234:CloudShield@cluster0.knbcq78.mongodb.net/?retryWrites=true&w=majority"
+username = "CloudShieldAI"
+password = quote_plus("cloudshield1234")
+MONGO_URI = "mongodb+srv://CloudShieldAI:Cloud1234@cluster0.knbcq78.mongodb.net/?appName=Cluster0"
 
 client = MongoClient(MONGO_URI)
+try:
+    client.admin.command('ping')
+    print("MongoDB Connected Successfully")
+except Exception as e:
+    print("MongoDB Connection Failed:", e)
+
 
 db = client["cloudshield"]
 attack_logs = db["attack_logs"]
@@ -69,6 +78,16 @@ def save_log():
     return jsonify({
         "message": "Log saved successfully"
     })
+
+@app.route("/testdb")
+def testdb():
+
+    attack_logs.insert_one({
+        "test": "CloudShield connected",
+        "time": datetime.now()
+    })
+
+    return "MongoDB working"
 
 
 @app.route("/logs")
